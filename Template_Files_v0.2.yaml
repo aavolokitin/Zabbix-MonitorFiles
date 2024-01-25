@@ -1,0 +1,98 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    - uuid: 846977d1dfed4968bc5f8bdb363285bc
+      name: 'Templates/Operating systems'
+  templates:
+    - uuid: 5f2b39347b33413288b86bd8df5128c4
+      template: 'Linux file monitor'
+      name: 'Linux file monitor'
+      groups:
+        - name: 'Templates/Operating systems'
+      discovery_rules:
+        - uuid: 67f1c180b11c4312af72386647386929
+          name: 'Discovery dirs to monitor'
+          type: SCRIPT
+          key: 'vfs.dir.get[{$DIRPATHS}]'
+          params: |
+            var macro = "{$DIRPATHS}";
+            var array = macro.split(",");
+            var obj = [];
+            
+            for(var i = 0; i < array.length; i++){
+                obj.push({"{#DIRPATH}": array[i]})
+            }
+            return JSON.stringify(obj);
+          lifetime: 1h
+          item_prototypes:
+            - uuid: 2be28c38457541838e38157f235cf580
+              name: 'List of {#DIRPATH}'
+              key: 'vfs.dir.get[{#DIRPATH}]'
+              delay: 15m
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: environment
+              trigger_prototypes:
+                - uuid: 8b7b0f4e9abd44cdaf7a2a08bd39227d
+                  expression: 'last(/Linux file monitor/vfs.dir.get[{#DIRPATH}],#1)<>last(/Linux file monitor/vfs.dir.get[{#DIRPATH}],#2)'
+                  name: '{#DIRPATH} file list has been changed'
+                  priority: INFO
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'Operating system description has changed'
+                      expression: 'last(/Linux by Zabbix agent/system.sw.os,#1)<>last(/Linux by Zabbix agent/system.sw.os,#2) and length(last(/Linux by Zabbix agent/system.sw.os))>0'
+                    - name: 'System name has changed'
+                      expression: 'last(/Linux by Zabbix agent/system.hostname,#1)<>last(/Linux by Zabbix agent/system.hostname,#2) and length(last(/Linux by Zabbix agent/system.hostname))>0'
+                  tags:
+                    - tag: scope
+                      value: security
+        - uuid: 6b796fb20af643418f5be50b39344f4f
+          name: 'Discovery files to monitor'
+          type: SCRIPT
+          key: 'vfs.file.get[{$FILEPATHS}]'
+          params: |
+            var macro = "{$FILEPATHS}";
+            var array = macro.split(",");
+            var obj = [];
+            
+            for(var i = 0; i < array.length; i++){
+                obj.push({"{#FILEPATH}": array[i]})
+            }
+            return JSON.stringify(obj);
+          lifetime: 1h
+          item_prototypes:
+            - uuid: bffe1a640f824df9b11530b15a776e8a
+              name: 'Checksum of {#FILEPATH}'
+              key: 'vfs.file.cksum[{#FILEPATH},sha256]'
+              delay: 15m
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: component
+                  value: environment
+              trigger_prototypes:
+                - uuid: 196bbbae32264be2b1f645ed861ce9de
+                  expression: 'last(/Linux file monitor/vfs.file.cksum[{#FILEPATH},sha256],#1)<>last(/Linux file monitor/vfs.file.cksum[{#FILEPATH},sha256],#2)'
+                  name: '{#FILEPATH} has been changed'
+                  priority: INFO
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'Operating system description has changed'
+                      expression: 'last(/Linux by Zabbix agent/system.sw.os,#1)<>last(/Linux by Zabbix agent/system.sw.os,#2) and length(last(/Linux by Zabbix agent/system.sw.os))>0'
+                    - name: 'System name has changed'
+                      expression: 'last(/Linux by Zabbix agent/system.hostname,#1)<>last(/Linux by Zabbix agent/system.hostname,#2) and length(last(/Linux by Zabbix agent/system.hostname))>0'
+                  tags:
+                    - tag: scope
+                      value: security
