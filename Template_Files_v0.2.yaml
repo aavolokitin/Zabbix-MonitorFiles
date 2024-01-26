@@ -96,3 +96,8 @@ zabbix_export:
                   tags:
                     - tag: scope
                       value: security
+      macros:
+        - macro: '{$DIRPATHS}'
+          value: '/etc/cron.d,/etc/cron.daily,/etc/cron.hourly,/etc/cron.monthly,/etc/cron.weekly,/etc/logrotate.d,/etc/rsyslog.d,/etc/ssh/sshd_config.d,/etc/sudoers.d'
+        - macro: '{$FILEPATHS}'
+          value: '/etc/crontab,/etc/default/grub,/etc/sysctl.conf,/etc/ssh/sshd_config,/etc/rsyslog.conf,/etc/resolv.conf,/etc/logrotate.conf,/etc/hosts,/etc/group,/etc/fstab,/etc/environment'
